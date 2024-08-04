@@ -17,7 +17,7 @@ export async function getDifyChatResponseStream(
   };
   const body = JSON.stringify({
     inputs: {
-      "text": messages[messages.length - 1].location
+      "text": "location"
     },
     query: messages[messages.length - 1].content,
     response_mode: "streaming",
