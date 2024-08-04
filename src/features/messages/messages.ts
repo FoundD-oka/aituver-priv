@@ -2,9 +2,10 @@ import { VRMExpression, VRMExpressionPresetName } from "@pixiv/three-vrm";
 import { KoeiroParam } from "../constants/koeiroParam";
 
 // ChatGPT API
-export type Message = {
+export interface Message {
   role: string; // "assistant" | "system" | "user";
   content: string | [ { type: string, text: string }, { type: string, image_url: { url: string }} ]; // マルチモーダル拡張
+  location?: string;
 };
 
 const talkStyles = [

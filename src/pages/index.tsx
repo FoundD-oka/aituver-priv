@@ -20,6 +20,7 @@ import { useTranslation } from 'react-i18next';
 import { fetchAndProcessComments } from "@/features/youtube/youtubeComments";
 import { buildUrl } from "@/utils/buildUrl";
 import Image from 'next/image';
+import { useLocation } from '@/features/location/locationService';
 
 export default function Home() {
   const { viewer } = useContext(ViewerContext);
@@ -79,7 +80,7 @@ export default function Home() {
   const [triggerShutter, setTriggerShutter] = useState(false);
   const [delayedText, setDelayedText] = useState("");
   const [webcamStatus, setWebcamStatus] = useState(false);
-
+  const location = useLocation();
 
   const incrementChatProcessingCount = () => {
     setChatProcessingCount(prevCount => prevCount + 1);
@@ -145,8 +146,8 @@ export default function Home() {
       openAiKey,
       anthropicKey,
       googleKey,
-      groqKey,
       localLlmUrl,
+      groqKey,
       difyKey,
       difyUrl,
       difyConversationId,
@@ -345,7 +346,7 @@ export default function Home() {
 
         if (value) receivedMessage += value;
 
-        // 返答内容のタグ部分と返答部分を分離
+        // 返答内容のタグ部分と返���離
         const tagMatch = receivedMessage.match(/^\[(.*?)\]/);
         if (tagMatch && tagMatch[0]) {
           tag = tagMatch[0];
@@ -364,7 +365,7 @@ export default function Home() {
 
             // 発話不要/不可能な文字列だった場合はスキップ
             if (
-              !sentence.includes("```") && !sentence.replace(/^[\s\u3000\t\n\r\[\(\{「［（【『〈《〔｛«‹〘〚〛〙›»〕》〉』】）］」\}\)\]'"''""・、。,.!?！？:：;；\-_=+~～*＊@＠#＃$＄%％^＾&＆|｜\\＼/／`｀]+$/gu, "")
+              !sentence.includes("```") && !sentence.replace(/^[\s\u3000\t\n\r\[\(\{「［（【『〈《〔｛«‹〘〚〛〙›»〕》〉】）］」\}\)\]'"''""・、。,.!?！？:：;；\-_=+~～*＊@＠#＃$＄%％^＾&＆|｜\\＼/／`｀]+$/gu, "")
             ) {
               continue;
             }
@@ -478,7 +479,7 @@ export default function Home() {
   }, [chatLog, processAIResponse]);
 
   /**
-   * アシスタントとの会話を行う
+   * シタト���の会話を行う
    */
   const handleSendChat = useCallback(
     async (text: string, role?: string) => {
@@ -561,20 +562,27 @@ export default function Home() {
         }
 
         setChatProcessing(true);
-        // ユーザーの発言を追加して表示
-        const messageLog: Message[] = [
-          ...chatLog,
-          { role: "user",
-            content: ( modalImage && selectAIService==="openai" && (selectAIModel==="gpt-4o-mini"||selectAIModel==="gpt-4o"||selectAIModel==="gpt-4-turbo")) ? 
-              ( [ { type: "text", text: newMessage}, { type: "image_url", image_url: { url: modalImage }}]) 
-              : (newMessage)
-          },
-        ];
-        if (modalImage) {
-          //setModalImage("");
-          clear();
-        }
-        setChatLog(messageLog);
+
+        const locationString = location
+          ? `緯度: ${location.latitude}, 経度: ${location.longitude}`
+          : "位置情報なし";
+
+        console.log("Location:", locationString);
+
+        const userMessage: Message = {
+          role: "user",
+          content: (modalImage && selectAIService === "openai" && (selectAIModel === "gpt-4o-mini" || selectAIModel === "gpt-4o" || selectAIModel === "gpt-4-turbo"))
+            ? [
+                { type: "text", text: newMessage },
+                { type: "image_url", image_url: { url: modalImage } }
+              ]
+            : newMessage,
+          location: locationString
+        };
+
+        console.log("User message:", userMessage);
+
+        const messageLog: Message[] = [...chatLog, userMessage];
 
         // TODO: AIに送信するメッセージの加工、処理がひどいので要修正
         const processedMessageLog = messageLog.map(message => ({
@@ -595,7 +603,12 @@ export default function Home() {
         ];
 
         try {
-          await processAIResponse(messageLog, messages);
+          const processedMessages = messages.map(message => ({
+            ...message,
+            content: typeof message.content === "string" ? message.content : message.content[0].text,
+            location: message.location
+          }));
+          await processAIResponse(messageLog, processedMessages);
         } catch (e) {
           console.error(e);
         }
@@ -603,7 +616,7 @@ export default function Home() {
         setChatProcessing(false);
       }
     },
-    [webSocketMode, koeiroParam, handleSpeakAi, codeLog, t, selectAIService, openAiKey, anthropicKey, googleKey, groqKey, difyKey, chatLog, systemPrompt, processAIResponse, modalImage, delayedText]
+    [webSocketMode, koeiroParam, handleSpeakAi, codeLog, t, selectAIService, openAiKey, anthropicKey, googleKey, groqKey, difyKey, chatLog, systemPrompt, processAIResponse, modalImage, delayedText, location]
   );
 
   ///取得したコメントをストックするリストの作成（tmpMessages）
