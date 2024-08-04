@@ -1,5 +1,19 @@
 import { Message } from "../messages/messages";
 
+interface TextItem {
+  type: string;
+  text: string;
+}
+
+interface ImageItem {
+  type: string;
+  image_url: { url: string };
+}
+
+function isTextItem(item: TextItem | ImageItem): item is TextItem {
+  return 'text' in item;
+}
+
 export async function getDifyChatResponseStream(
   messages: Message[],
   apiKey: string,
@@ -15,11 +29,26 @@ export async function getDifyChatResponseStream(
     'Authorization': `Bearer ${apiKey}`,
     'Content-Type': 'application/json'
   };
+
+  const lastMessage = messages[messages.length - 1];
+  
+  let content = '';
+  if (typeof lastMessage.content === 'string') {
+    content = lastMessage.content;
+  } else if (Array.isArray(lastMessage.content)) {
+    content = lastMessage.content
+      .filter(isTextItem)
+      .map(item => item.text)
+      .join(' ');
+  }
+
+  const query = lastMessage.location 
+    ? `${content} (Location: ${lastMessage.location})`
+    : content;
+
   const body = JSON.stringify({
-    inputs: {
-      "text": "location"
-    },
-    query: messages[messages.length - 1].content,
+    inputs: {},
+    query: query,
     response_mode: "streaming",
     conversation_id: conversationId,
     user: "aituber-kit",
@@ -37,7 +66,6 @@ export async function getDifyChatResponseStream(
   }
 
   const reader = response.body.getReader();
-
   const res = new ReadableStream({
     async start(controller) {
       try {
@@ -47,7 +75,7 @@ export async function getDifyChatResponseStream(
           const textChunk = new TextDecoder("utf-8").decode(value);
           const messages = textChunk.split('\n').filter(line => line.startsWith('data:'));
           messages.forEach(message => {
-            const data = JSON.parse(message.slice(5)); // Remove 'data:' prefix
+            const data = JSON.parse(message.slice(5));
             if (data.event === "message") {
               controller.enqueue(data.answer);
               setDifyConversationId(data.conversation_id);

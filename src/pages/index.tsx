@@ -591,7 +591,8 @@ export default function Home() {
             selectAIService === "openai" &&
             (selectAIModel==="gpt-4o-mini"||selectAIModel==="gpt-4o"||selectAIModel==="gpt-4-turbo")
               ? message.content
-              : message.content[0].text
+              : message.content[0].text,
+          location: message.location // location 情報を保持
         }));
 
         const messages: Message[] = [
