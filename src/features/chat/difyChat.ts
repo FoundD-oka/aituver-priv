@@ -16,10 +16,9 @@ export async function getDifyChatResponseStream(
     'Content-Type': 'application/json'
   };
   const body = JSON.stringify({
-    inputs: {
-      location: messages[messages.length - 1].location
-    },
-    query: messages[messages.length - 1].content,
+    inputs: {},
+    query: messages[messages.length - 1].content, // messages[-1] は TypeScript では無効です
+    location: messages[messages.length - 1].location, // messages[-1] は TypeScript では無効です
     response_mode: "streaming",
     conversation_id: conversationId,
     user: "aituber-kit",
