@@ -15,10 +15,11 @@ export async function getDifyChatResponseStream(
     'Authorization': `Bearer ${apiKey}`,
     'Content-Type': 'application/json'
   };
-  const lastMessage = messages[messages.length - 1];
   const body = JSON.stringify({
-    query: lastMessage.content,
-    location: lastMessage.location || "",
+    inputs: {
+      "text": messages[messages.length - 1].location
+    },
+    query: messages[messages.length - 1].content,
     response_mode: "streaming",
     conversation_id: conversationId,
     user: "aituber-kit",
