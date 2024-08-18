@@ -12,10 +12,12 @@ export function useLocation() {
     if ("geolocation" in navigator) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setLocation({
+          const newLocation = {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude,
-          });
+          };
+          setLocation(newLocation);
+          console.log("位置情報を取得しました:", newLocation);
         },
         (error) => {
           console.error("位置情報の取得に失敗しました:", error);

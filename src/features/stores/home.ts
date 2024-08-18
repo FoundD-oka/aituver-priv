@@ -4,6 +4,11 @@ import { persist } from 'zustand/middleware'
 import { Message } from '@/features/messages/messages'
 import { Viewer } from '../vrmViewer/viewer'
 
+interface Location {
+  latitude: number
+  longitude: number
+}
+
 export interface PersistedState {
   userOnboarded: boolean
   chatLog: Message[]
@@ -24,6 +29,7 @@ export interface TransientState {
   webcamStatus: boolean
   ws: WebSocket | null
   voicePlaying: boolean // WebSocketモード用の設定
+  userLocation: Location | null
 }
 
 export type HomeState = PersistedState & TransientState
@@ -59,6 +65,7 @@ const homeStore = create<HomeState>()(
       webcamStatus: false,
       ws: null,
       voicePlaying: false,
+      userLocation: null, // 追加：初期値を null に設定
     }),
     {
       name: 'home',

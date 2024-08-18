@@ -10,6 +10,7 @@ export type Message = {
         { type: string; text: string },
         { type: string; image_url: { url: string } },
       ] // マルチモーダル拡張
+      location?: string;
 }
 
 const talkStyles = [
